@@ -28,6 +28,8 @@ The model is trained using the **SONAR dataset** and predicts the object type ba
 ---
 
 ## 📂 Project Structure
+
+
 SONAR-Rock-vs-Mine-Prediction/
 │
 ├── SONAR_Rock_vs_Mine_Prediction.ipynb
