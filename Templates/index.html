@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SONAR Rock vs Mine Detection</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    min-height:100vh;
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:30px;
+}
+
+.container{
+    width:100%;
+    max-width:900px;
+}
+
+header{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+header h1{
+    color:#fff;
+    font-size:2.8rem;
+    margin-bottom:10px;
+}
+
+header p{
+    color:#cbd5e1;
+    font-size:1rem;
+}
+
+.card{
+    background:rgba(255,255,255,0.08);
+    backdrop-filter:blur(15px);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px;
+    padding:30px;
+    margin-bottom:25px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);
+}
+
+.card h2{
+    color:white;
+    margin-bottom:10px;
+}
+
+.card p{
+    color:#cbd5e1;
+    margin-bottom:15px;
+}
+
+textarea{
+    width:100%;
+    min-height:180px;
+    resize:none;
+    border:none;
+    outline:none;
+    border-radius:12px;
+    padding:15px;
+    background:#0f172a;
+    color:white;
+    font-size:15px;
+    margin-bottom:20px;
+}
+
+textarea::placeholder{
+    color:#94a3b8;
+}
+
+button{
+    width:100%;
+    border:none;
+    background:#3b82f6;
+    color:white;
+    padding:15px;
+    font-size:18px;
+    font-weight:600;
+    border-radius:12px;
+    cursor:pointer;
+    transition:.3s;
+}
+
+button:hover{
+    background:#2563eb;
+    transform:translateY(-2px);
+}
+
+button:disabled{
+    opacity:.7;
+    cursor:not-allowed;
+}
+
+.result-card{
+    text-align:center;
+}
+
+.result-icon{
+    font-size:70px;
+    margin:15px 0;
+}
+
+#predictionText{
+    font-size:40px;
+    margin-bottom:10px;
+}
+
+.confidence{
+    color:white;
+    font-size:18px;
+}
+
+.hidden{
+    display:none;
+}
+
+.rock{
+    color:#10b981;
+}
+
+.mine{
+    color:#ef4444;
+}
+
+.footer{
+    text-align:center;
+    color:#94a3b8;
+    margin-top:20px;
+}
+
+@media(max-width:768px){
+
+    header h1{
+        font-size:2rem;
+    }
+
+    #predictionText{
+        font-size:30px;
+    }
+
+    .card{
+        padding:20px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>🚢 SONAR Rock vs Mine Detection</h1>
+        <p>AI-Powered Underwater Object Classification</p>
+    </header>
+
+    <div class="card">
+
+        <h2>Upload SONAR Data</h2>
+
+        <p>
+            Enter exactly 60 sonar values separated by commas.
+        </p>
+
+        <textarea
+            id="sonarInput"
+            placeholder="0.0307,0.0523,0.0653,0.0521,0.0618..."
+        ></textarea>
+
+        <button id="predictBtn">
+            Predict Object
+        </button>
+
+    </div>
+
+    <div class="card result-card hidden" id="resultCard">
+
+        <h2>Prediction Result</h2>
+
+        <div class="result-icon" id="resultIcon">🪨</div>
+
+        <h1 id="predictionText">ROCK</h1>
+
+        <div class="confidence">
+            Confidence:
+            <span id="confidenceValue">0%</span>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        Built with Machine Learning & Flask
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+    const predictBtn = document.getElementById("predictBtn");
+    const sonarInput = document.getElementById("sonarInput");
+
+    const resultCard = document.getElementById("resultCard");
+    const predictionText = document.getElementById("predictionText");
+    const confidenceValue = document.getElementById("confidenceValue");
+    const resultIcon = document.getElementById("resultIcon");
+
+    predictBtn.addEventListener("click", async function(){
+
+        const input = sonarInput.value.trim();
+
+        if(!input){
+            alert("Please enter sonar values.");
+            return;
+        }
+
+        const values = input.split(",");
+
+        if(values.length !== 60){
+            alert(
+                `You entered ${values.length} values.\nPlease enter exactly 60 values.`
+            );
+            return;
+        }
+
+        try{
+
+            predictBtn.innerText = "Predicting...";
+            predictBtn.disabled = true;
+
+            const response = await fetch("/predict",{
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
+                    sonar_data: values.map(Number)
+                })
+            });
+
+            const data = await response.json();
+
+            resultCard.classList.remove("hidden");
+
+            if(data.prediction === "R"){
+
+                predictionText.innerText = "🪨 ROCK";
+                predictionText.className = "rock";
+                resultIcon.innerText = "🪨";
+
+            }else{
+
+                predictionText.innerText = "💣 MINE";
+                predictionText.className = "mine";
+                resultIcon.innerText = "💣";
+
+            }
+
+            confidenceValue.innerText =
+                data.confidence + "%";
+
+        }
+        catch(error){
+
+            console.error(error);
+            alert("Error connecting to Flask backend.");
+
+        }
+        finally{
+
+            predictBtn.innerText = "Predict Object";
+            predictBtn.disabled = false;
+
+        }
+
+    });
+
+});
+</script>
+
+</body>
+</html>
