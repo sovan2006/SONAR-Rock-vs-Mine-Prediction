@@ -174,4 +174,3 @@ B.Tech Artificial Intelligence & Machine Learning
 * GitHub: https://github.com/sovan2006
 * LinkedIn: www.linkedin.com/in/sovan-barik-711bba326
 
-ct useful, consider giving it a ⭐ on GitHub.
